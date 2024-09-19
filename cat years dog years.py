@@ -1,4 +1,7 @@
-
+'''
+programa que calcula la edad de un perro y un gato
+con respecto a los años umanos
+'''
 def calculate_years(human_years):
     if human_years < 1:
         return "humanYears debe ser al menos 1"
