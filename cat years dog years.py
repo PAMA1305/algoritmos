@@ -1,6 +1,6 @@
 '''
 programa que calcula la edad de un perro y un gato
-con respecto a los años umanos
+con respecto a los años humanos
 '''
 def calculate_years(human_years):
     if human_years < 1:
