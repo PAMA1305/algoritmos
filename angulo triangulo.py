@@ -1,3 +1,5 @@
+'''protgrama que calcula el tercer angulo
+de un triangulo'''
 def tercer_angulo(angulo1, angulo2):
     return 180 - (angulo1 + angulo2)
 
