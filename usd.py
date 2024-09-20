@@ -1,3 +1,5 @@
+'''programa que convierte de dolares de usa
+a yuanes de china'''
 def convertir_usd_a_cny(dolares):
     # Definimos la tasa de conversión
     tasa_conversion = 6.75
