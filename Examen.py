@@ -110,6 +110,7 @@ class App:
 
         for user, data in self.user_data.items():
             self.progress_tree.insert("", "end", values=(user, data["levels_completed"]))
++
 
         btn_back = tk.Button(self.current_frame, text="Regresar", command=self.show_inicio1)
         btn_back.pack(pady=10)
