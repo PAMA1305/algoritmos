@@ -7,7 +7,7 @@ import random
 class App:
     def __init__(self, root):
         self.root = root
-        self.root.title("Juego Memorame")
+        self.root.title("Juego Memorama")
         self.root.geometry("400x400")
         self.user_data = {}
         self.current_frame = None
