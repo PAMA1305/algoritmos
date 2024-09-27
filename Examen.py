@@ -1,240 +1,268 @@
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import messagebox, ttk, filedialog
 import random
+import time
+import pygame
 
+# Inicializa Pygame para el reproductor de música
+pygame.mixer.init()
 
 
 class App:
     def __init__(self, root):
         self.root = root
-        self.root.title("Juego Memorama")
-        self.root.geometry("400x400")
-        self.user_data = {}
-        self.current_frame = None
-        self.level = 1 # Inicializa Pygame para reproducir música
-        self.show_inicio1()
+        self.root.title("Juego Memórame")
+        self.root.geometry("700x600")
+        self.root.configure(bg="black")  # Color de fondo negro
 
+        # Almacén de usuarios y niveles
+        self.usuarios = {}
+        self.colores = ["#39FF14", "#FF073A", "#FFEC40", "#A800FF"]  # Colores neón
+        self.secuencia = []
+        self.intentos = []
 
-    def show_main_menu(self):
-            # Limpiar la ventana
-            for widget in self.root.winfo_children():
-                widget.destroy()
+        self.inicio_menu()
 
-
-
-    def show_inicio(self):
+    def inicio_menu(self):
         self.clear_frame()
-        self.current_frame = tk.Frame(self.root, bg="lightblue")
-        self.current_frame.pack(fill=tk.BOTH, expand=True)
 
-        title_label = tk.Label(self.current_frame, text="INICIO", bg="lightblue", font=("Arial", 24))
-        title_label.pack(pady=20)
+        inicio_frame = tk.Frame(self.root, bg="black")  # Color de fondo negro
+        inicio_frame.pack(expand=True, fill=tk.BOTH)
 
-        btn_store_data = tk.Button(self.current_frame, text="Almacenar Datos", command=self.store_data)
-        btn_store_data.pack(pady=10)
+        title = tk.Label(inicio_frame, text="¿RECUERDAS EL COLOR?", font=("Stencil", 24), bg="black", fg="blue")
+        title.pack(pady=20)
 
-        btn_show_progress = tk.Button(self.current_frame, text="Ver Avance", command=self.show_progress)
-        btn_show_progress.pack(pady=10)
+        nota = tk.Label(inicio_frame, text="SI AÚN NO SABES JUGAR YO RECOMIENDO QUE ENTRES A LAS REGLAS DEL JUEGO",
+                        font=("Arial", 12), bg="black", fg="white", wraplength=400)
+        nota.pack(pady=10)
 
-        btn_game_rules = tk.Button(self.current_frame, text="Reglas del Juego", command=self.show_rules)
-        btn_game_rules.pack(pady=10)
+        btn_nuevo_juego = tk.Button(inicio_frame, text="Registrar Usuario", command=self.nuevo_juego, bg="#4A90E2",
+                                    fg="white", width=25, height=2)
+        btn_nuevo_juego.pack(pady=10)
 
-        btn_new_game = tk.Button(self.current_frame, text="Nuevo Juego", command=self.start_new_game)
-        btn_new_game.pack(pady=10)
+        btn_avance = tk.Button(inicio_frame, text="Estadisticas", command=self.mostrar_avance, bg="#4A90E2",
+                               fg="white", width=25, height=2)
+        btn_avance.pack(pady=10)
 
+        btn_reglas = tk.Button(inicio_frame, text="Reglas del Juego", command=self.mostrar_reglas, bg="#4A90E2",
+                               fg="white", width=25, height=2)
+        btn_reglas.pack(pady=10)
 
+        btn_reproductor = tk.Button(inicio_frame, text="Reproductor de Música", command=self.reproductor_musica,
+                                    bg="#4A90E2", fg="white", width=25, height=2)
+        btn_reproductor.pack(pady=10)
 
-    def show_inicio1(self):
-        self.clear_frame()
-        self.current_frame = tk.Frame(self.root, bg="lightblue")
-        self.current_frame.pack(fill=tk.BOTH, expand=True)
-
-        title_label = tk.Label(self.current_frame, text="INICIO", bg="lightblue", font=("Arial", 24))
-        title_label.pack(pady=20)
-
-        btn_store_data = tk.Button(self.current_frame, text="Almacenar Datos", command=self.store_data)
-        btn_store_data.pack(pady=10)
-
-        btn_show_progress = tk.Button(self.current_frame, text="Ver Avance", command=self.show_progress)
-        btn_show_progress.pack(pady=10)
-
-        btn_game_rules = tk.Button(self.current_frame, text="Reglas del Juego", command=self.show_rules)
-        btn_game_rules.pack(pady=10)
-
-        btn_new_game = tk.Button(self.current_frame, text="Nuevo Juego", command=self.start_new_game)
-        btn_new_game.pack(pady=10)
+        # Botón para cerrar la aplicación
+        btn_cerrar = tk.Button(inicio_frame, text="Cerrar", command=self.root.quit, bg="#FF073A", fg="white", width=25,
+                               height=2)
+        btn_cerrar.pack(pady=10)
 
     def clear_frame(self):
-        if self.current_frame:
-            self.current_frame.destroy()
+        for widget in self.root.winfo_children():
+            widget.destroy()
 
-    def store_data(self):
+    def mostrar_avance(self):
         self.clear_frame()
-        self.current_frame = tk.Frame(self.root, bg="lightblue")
-        self.current_frame.pack(fill=tk.BOTH, expand=True)
 
-        label = tk.Label(self.current_frame, text="Ingrese su nombre:", bg="lightblue")
-        label.pack(pady=10)
+        avance_frame = tk.Frame(self.root, bg="black")  # Color de fondo negro
+        avance_frame.pack(expand=True, fill=tk.BOTH)
 
-        self.user_entry = tk.Entry(self.current_frame)
-        self.user_entry.pack(pady=10)
+        title = tk.Label(avance_frame, text="Avances de usuario", font=("Stencil", 20), bg="black", fg="yellow")
+        title.pack(pady=20)
 
-        btn_save = tk.Button(self.current_frame, text="Guardar", command=self.save_user_data)
-        btn_save.pack(pady=10)
+        self.tabla_avance = ttk.Treeview(avance_frame, columns=("Usuario", "Aciertos", "Errores"), show='headings')
+        self.tabla_avance.heading("Usuario", text="Usuario")
+        self.tabla_avance.heading("Aciertos", text="Aciertos")
+        self.tabla_avance.heading("Errores", text="Errores")
 
-        btn_back = tk.Button(self.current_frame, text="Regresar", command=self.show_inicio1)
-        btn_back.pack(pady=10)
+        self.tabla_avance.tag_configure('center', anchor='center')
+        self.tabla_avance.column("Usuario", anchor='center')
+        self.tabla_avance.column("Aciertos", anchor='center')
+        self.tabla_avance.column("Errores", anchor='center')
 
-    def save_user_data(self):
-        user_name = self.user_entry.get()
-        if user_name:
-            self.user_data[user_name] = {"levels_completed": 0}
-            messagebox.showinfo("Guardado", f"Datos de {user_name} guardados.")
-            self.user_entry.delete(0, tk.END)
-        else:
-            messagebox.showwarning("Advertencia", "Por favor, ingrese un nombre.")
+        self.tabla_avance.pack(pady=20)
 
-    def show_progress(self):
+        for usuario, datos in self.usuarios.items():
+            self.tabla_avance.insert("", "end", values=(usuario, datos['aciertos'], datos['errores']), tags=('center',))
+
+        btn_regresar = tk.Button(avance_frame, text="Regresar al Menú INICIO", command=self.inicio_menu, bg="#4A90E2",
+                                 fg="white", width=25, height=2)
+        btn_regresar.pack(pady=10)
+
+    def mostrar_reglas(self):
         self.clear_frame()
-        self.current_frame = tk.Frame(self.root, bg="lightblue")
-        self.current_frame.pack(fill=tk.BOTH, expand=True)
 
-        label = tk.Label(self.current_frame, text="Avance del Usuario", bg="lightblue", font=("Arial", 18))
-        label.pack(pady=10)
+        reglas_frame = tk.Frame(self.root, bg="black")  # Color de fondo negro
+        reglas_frame.pack(expand=True, fill=tk.BOTH)
 
-        self.progress_tree = ttk.Treeview(self.current_frame, columns=("Usuario", "Niveles Completados"),
-                                          show='headings')
-        self.progress_tree.heading("Usuario", text="Usuario")
-        self.progress_tree.heading("Niveles Completados", text="Niveles Completados")
-        self.progress_tree.pack(pady=20)
+        title = tk.Label(reglas_frame, text="Reglas del Juego", font=("Stencil", 20), bg="black", fg="orange")
+        title.pack(pady=20)
 
-        for user, data in self.user_data.items():
-            self.progress_tree.insert("", "end", values=(user, data["levels_completed"]))
+        reglas_texto = tk.Label(reglas_frame, text=(
+            "Cómo jugar:\n"
+            "1. Para poder empezar a jugar necesitas presionar el botón de “Registrar Usuario” al momento de presionarlo te mandará a un menú en el cual podrás registrar un usuario.\n"
+            "2. Si ya te registraste, tu usuario ahora podrá presionar el botón de “Iniciar Juego de Memoria” y ¡Que comience la diversión!\n"
+            "3. Si pierdes o ganas recuerda que todos tus puntajes como: aciertos y errores se estarán guardando automáticamente en tu avance de usuario, este lo puedes ver o encontrar en el menú principal solo seleccionando el botón “Estadísticas”.\n"
+            "4. Recuerda que antes de empezar a jugar también tenemos la opción de colocar una canción de fondo con nuestro reproductor, el cual reproduce música en mp3. Solo necesitas tener descargada la canción en tu PC y podrás seleccionarla. Para poder seleccionar la canción de tu agrado, necesitas presionar el botón en el menú inicial “Reproductor de Música”, después en el menú de Reproductor de música presiona el botón “Seleccionar Canción” y te desplegará una ventana con tus archivos mp3 que tengas en tu PC, solo escoges la canción de tu agrado y presionas el botón “Reproducir Música” y listo, ahora puedes disfrutar del juego con una buena melodía.\n"
+            "\nReglas del Juego:\n"
+            "1. Recuerda las posiciones de los colores que se encienden.\n"
+            "2. Haz clic en los colores encendidos en el mismo orden.\n"
+            "3. Gana puntos por cada acierto y si fallas, perderás puntos.\n"
+            "4. El juego termina cuando se alcanza el número máximo de secuencias o decides salir."
+        ), wraplength=400, bg="black", fg="white", justify="left")
+        reglas_texto.pack(pady=20)
 
+        btn_regresar = tk.Button(reglas_frame, text="Regresar al Menú INICIO", command=self.inicio_menu, bg="#4A90E2",
+                                 fg="white", width=25, height=2)
+        btn_regresar.pack(pady=10)
 
-        btn_back = tk.Button(self.current_frame, text="Regresar", command=self.show_inicio1)
-        btn_back.pack(pady=10)
-
-    def show_rules(self):
+    def nuevo_juego(self):
         self.clear_frame()
-        self.current_frame = tk.Frame(self.root, bg="lightblue")
-        self.current_frame.pack(fill=tk.BOTH, expand=True)
 
-        rules_label = tk.Label(self.current_frame, text="Reglas del Juego", bg="lightblue", font=("Arial", 18))
-        rules_label.pack(pady=10)
+        nuevo_juego_frame = tk.Frame(self.root, bg="black")  # Color de fondo negro
+        nuevo_juego_frame.pack(expand=True, fill=tk.BOTH)
 
-        rules_text = (
-            "1. Memoriza las cartas.\n"
-            "2. Encuentra las parejas de números.\n"
-            "3. Gana el juego emparejando todas las cartas.\n"
-            "4. ¡Diviértete!"
-        )
-        rules_display = tk.Label(self.current_frame, text=rules_text, bg="lightblue", justify=tk.LEFT)
-        rules_display.pack(pady=10)
+        title = tk.Label(nuevo_juego_frame, text="Registro de Usuario", font=("Stencil", 20), bg="black", fg="white")
+        title.pack(pady=20)
 
-        btn_back = tk.Button(self.current_frame, text="Regresar", command=self.show_inicio1)
-        btn_back.pack(pady=10)
+        self.usuario_entry = tk.Entry(nuevo_juego_frame)
+        self.usuario_entry.pack(pady=10)
+        self.usuario_entry.insert(0, "")
 
-    def start_new_game(self):
+        btn_guardar = tk.Button(nuevo_juego_frame, text="Registrar Usuario", command=self.guardar_usuario, bg="#4A90E2",
+                                fg="white", width=25, height=2)
+        btn_guardar.pack(pady=10)
+
+        btn_jugar = tk.Button(nuevo_juego_frame, text="Iniciar Juego de Memoria", command=self.iniciar_juego,
+                              bg="#4A90E2", fg="white", width=25, height=2)
+        btn_jugar.pack(pady=10)
+
+        btn_regresar = tk.Button(nuevo_juego_frame, text="Regresar al Menú INICIO", command=self.inicio_menu,
+                                 bg="#4A90E2", fg="white", width=25, height=2)
+        btn_regresar.pack(pady=10)
+
+    def guardar_usuario(self):
+        usuario = self.usuario_entry.get().strip()
+        if usuario and usuario not in self.usuarios:
+            self.usuarios[usuario] = {'aciertos': 0, 'errores': 0}  # Inicializa aciertos y errores
+            messagebox.showinfo("Éxito", f"Usuario '{usuario}' registrado.")
+            self.usuario_entry.delete(0, tk.END)
+        else:
+            messagebox.showwarning("Error", "Usuario ya existe o nombre vacío.")
+
+    def iniciar_juego(self):
         self.clear_frame()
-        self.current_frame = tk.Frame(self.root, bg="lightblue")
-        self.current_frame.pack(fill=tk.BOTH, expand=True)
+        self.secuencia = []
+        self.intentos = []
+        self.dificultad = 4  # número de colores a mostrar
+        self.jugar()
 
-        label = tk.Label(self.current_frame, text="Ingrese su nombre para iniciar el juego:", bg="lightblue")
-        label.pack(pady=10)
-
-        self.new_game_entry = tk.Entry(self.current_frame)
-        self.new_game_entry.pack(pady=10)
-
-        btn_start = tk.Button(self.current_frame, text="Iniciar Juego", command=self.initiate_game)
-        btn_start.pack(pady=10)
-
-        btn_back = tk.Button(self.current_frame, text="Regresar", command=self.show_inicio1)
-        btn_back.pack(pady=10)
-
-    def initiate_game(self):
-        user_name = self.new_game_entry.get()
-        if user_name in self.user_data:
-            self.new_game_entry.delete(0, tk.END)
-            self.level = 1
-            self.show_game_board(user_name, self.level)
+    def jugar(self):
+        if len(self.secuencia) < 5:  # Cambia el límite a 5 secuencias
+            nuevo_color = random.choice(self.colores)
+            self.secuencia.append(nuevo_color)
+            self.mostrar_colores()
         else:
-            messagebox.showwarning("Advertencia", "Por favor, ingrese un nombre registrado.")
+            self.finalizar_juego()  # Llama al método para finalizar el juego
 
-    def show_game_board(self, user_name, level):
+    def mostrar_colores(self):
+        for i, color in enumerate(self.secuencia):
+            self.root.after(i * 1000, self.encender_cuadro, color)
+        self.root.after(len(self.secuencia) * 1000, self.pedir_intentos)
+
+    def encender_cuadro(self, color):
+        cuadro = tk.Frame(self.root, bg=color, width=200, height=200)
+        cuadro.grid(row=0, column=0, padx=5, pady=5)
+        self.root.update()
+        time.sleep(0.5)
+        cuadro.destroy()
+
+    def pedir_intentos(self):
+        self.intentos = []
+        self.mostrar_tablero()
+
+    def mostrar_tablero(self):
+        self.cuadros = []
+        # Ajustar tamaño y espaciado de los cuadros de colores
+        for i, color in enumerate(self.colores):
+            cuadro = tk.Frame(self.root, bg=color, width=150, height=150)  # Aumentar tamaño
+            cuadro.grid(row=i // 2, column=i % 2, padx=10, pady=10)  # Reducir espaciado
+            cuadro.bind("<Button-1>", lambda e, c=color: self.registrar_intento(c))
+            self.cuadros.append(cuadro)
+
+        # Centra la cuadrícula
+        for i in range(2):  # Dos filas
+            self.root.grid_rowconfigure(i, weight=1)
+        for i in range(2):  # Dos columnas
+            self.root.grid_columnconfigure(i, weight=1)
+
+    def registrar_intento(self, color):
+        self.intentos.append(color)
+        if len(self.intentos) == len(self.secuencia):
+            self.comprobar_intentos()
+
+    def comprobar_intentos(self):
+        if self.intentos == self.secuencia:
+            usuario_actual = list(self.usuarios.keys())[-1]  # Asume que el último usuario registrado es el actual
+            self.usuarios[usuario_actual]['aciertos'] += 1
+            messagebox.showinfo("¡Correcto!", "¡Has acertado!")
+            self.jugar()
+        else:
+            usuario_actual = list(self.usuarios.keys())[-1]
+            self.usuarios[usuario_actual]['errores'] += 1
+            messagebox.showerror("¡Incorrecto!", "Has fallado, Padrino. Sigue echándole ganas.")
+            self.intentos = []
+            self.secuencia = []
+            self.inicio_menu()
+
+    def finalizar_juego(self):
+        messagebox.showinfo("¡Felicidades!", "¡Felicidades, ya ganaste, Padrino!")
+        self.intentos = []
+        self.secuencia = []
+        self.inicio_menu()  # Regresa al menú de inicio después de finalizar
+
+    def reproductor_musica(self):
         self.clear_frame()
-        self.current_frame = tk.Frame(self.root, bg="lightblue")
-        self.current_frame.pack(fill=tk.BOTH, expand=True)
 
-        if level == 1:
-            self.cards = list(range(1, 11)) * 2  # Números del 1 al 10
-        elif level == 2:
-            self.cards = list(range(11, 21)) * 2  # Números del 11 al 20
-        elif level == 3:
-            self.cards = list(range(21, 31)) * 2  # Números del 21 al 30
-        elif level == 4:
-            self.cards = list(range(31, 41)) * 2  # Números del 31 al 40
+        reproductor_frame = tk.Frame(self.root, bg="black")  # Color de fondo negro
+        reproductor_frame.pack(expand=True, fill=tk.BOTH)
+
+        title = tk.Label(reproductor_frame, text="Reproductor de Música", font=("Stencil", 20), bg="black", fg="pink")
+        title.pack(pady=20)
+
+        btn_seleccionar = tk.Button(reproductor_frame, text="Seleccionar Canción", command=self.seleccionar_cancion,
+                                    bg="#4A90E2", fg="white", width=25, height=2)
+        btn_seleccionar.pack(pady=10)
+
+        btn_play = tk.Button(reproductor_frame, text="Reproducir Música", command=self.play_music, bg="#4A90E2",
+                             fg="white", width=25, height=2)
+        btn_play.pack(pady=10)
+
+        btn_stop = tk.Button(reproductor_frame, text="Detener Música", command=self.stop_music, bg="#4A90E2",
+                             fg="white", width=25, height=2)
+        btn_stop.pack(pady=10)
+
+        btn_regresar = tk.Button(reproductor_frame, text="Regresar al Menú INICIO", command=self.inicio_menu,
+                                 bg="#4A90E2", fg="white", width=25, height=2)
+        btn_regresar.pack(pady=10)
+
+        self.current_music = None
+
+    def seleccionar_cancion(self):
+        self.current_music = filedialog.askopenfilename(title="Seleccionar Canción",
+                                                        filetypes=[("Archivos de Audio", "*.mp3;*.wav")])
+        if self.current_music:
+            messagebox.showinfo("Éxito", f"Canción seleccionada: {self.current_music}")
+
+    def play_music(self):
+        if self.current_music:
+            pygame.mixer.music.load(self.current_music)
+            pygame.mixer.music.play(-1)  # Reproduce en bucle
         else:
-            self.cards = list(range(41, 51)) * 2  # Números del 41 al 50
+            messagebox.showwarning("Error", "No se ha seleccionado ninguna canción.")
 
-        random.shuffle(self.cards)
-        self.buttons = []
-
-        for i in range(4):  # 4 filas
-            row = []
-            for j in range(5):  # 5 columnas
-                btn = tk.Button(self.current_frame, text="?", width=5, height=2,
-                                command=lambda x=i, y=j: self.flip_card(x, y, user_name, level))
-                btn.grid(row=i, column=j, padx=5, pady=5)
-                row.append(btn)
-            self.buttons.append(row)
-
-        self.first_card = None
-        self.second_card = None
-        self.first_card_pos = None
-        self.second_card_pos = None
-
-        btn_back = tk.Button(self.current_frame, text="Regresar", command=self.show_inicio1)
-        btn_back.grid(row=5, columnspan=5, pady=10)
-
-    def flip_card(self, row, col, user_name, level):
-        button = self.buttons[row][col]
-        card_value = self.cards[row * 5 + col]
-
-        button.config(text=card_value, state="disabled")
-
-        if self.first_card is None:
-            self.first_card = card_value
-            self.first_card_pos = (row, col)
-        else:
-            self.second_card = card_value
-            self.second_card_pos = (row, col)
-            self.root.after(1000, self.check_match, user_name, level)
-
-    def check_match(self, user_name, level):
-        if self.first_card == self.second_card:
-            messagebox.showinfo("¡Coincidencia!", "¡Encontraste un par!")
-            self.user_data[user_name]["levels_completed"] += 1
-        else:
-            messagebox.showinfo("No coincide", "No es un par.")
-            self.buttons[self.first_card_pos[0]][self.first_card_pos[1]].config(text="?", state="normal")
-            self.buttons[self.second_card_pos[0]][self.second_card_pos[1]].config(text="?", state="normal")
-
-        self.first_card = None
-        self.second_card = None
-
-        # Verifica si el juego ha terminado
-        if all(btn["text"] != "?" for row in self.buttons for btn in row):
-            if level < 5:
-                messagebox.showinfo("Nivel Completo", f"¡Felicidades! Has completado el Nivel {level}.")
-                self.level += 1
-                self.show_game_board(user_name, self.level)
-            else:
-                messagebox.showinfo("Juego terminado", f"¡Felicidades, {user_name}! Has terminado el juego.")
-                self.show_inicio1()
-
-
-
+    def stop_music(self):
+        pygame.mixer.music.stop()
 
 
 if __name__ == "__main__":
